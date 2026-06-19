@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AuraClust - Premium Customer Segmentation & K-Means Dashboard</title>
+    <!-- Google Fonts: Outfit & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Premium Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-logo">
+                    <i class="fa-solid fa-chart-pie logo-icon"></i>
+                </div>
+                <div class="brand-text">
+                    <h1>AuraClust</h1>
+                    <span>Customer Intel</span>
+                </div>
+            </div>
+            
+            <nav class="nav-menu">
+                <a href="#" class="nav-item active" data-tab="tab-dashboard" id="nav-dashboard">
+                    <i class="fa-solid fa-table-columns"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-item" data-tab="tab-analyzer" id="nav-analyzer">
+                    <i class="fa-solid fa-circle-nodes"></i>
+                    <span>Cluster Analyzer</span>
+                </a>
+                <a href="#" class="nav-item" data-tab="tab-segments" id="nav-segments">
+                    <i class="fa-solid fa-users-viewfinder"></i>
+                    <span>Segment Breakdown</span>
+                </a>
+                <a href="#" class="nav-item" data-tab="tab-predictor" id="nav-predictor">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <span>Prospect Predictor</span>
+                </a>
+                <a href="#" class="nav-item" data-tab="tab-explorer" id="nav-explorer">
+                    <i class="fa-solid fa-database"></i>
+                    <span>Data Explorer</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="engine-badge">
+                    <span class="badge-dot"></span>
+                    <span>K-Means Engine Active</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <h2 id="page-title">Dashboard Overview</h2>
+                    <p class="subtitle" id="page-subtitle">Perform K-Means clustering and review dataset metrics</p>
+                </div>
+                
+                <div class="header-actions">
+                    <button class="btn btn-secondary" id="btn-reset-data" style="display: none;">
+                        <i class="fa-solid fa-rotate-left"></i> Reset to Default
+                    </button>
+                    <div class="dataset-pill">
+                        <i class="fa-solid fa-file-csv"></i>
+                        <span id="current-dataset-name">Default: Mall_Customers.csv</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Overview Tab -->
+            <section class="tab-panel active" id="tab-dashboard">
+                <!-- Summary Metrics Grid -->
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-info">
+                            <span class="metric-label">Total Customers</span>
+                            <h3 class="metric-value" id="metric-total-customers">-</h3>
+                        </div>
+                        <div class="metric-icon bg-purple">
+                            <i class="fa-solid fa-users"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <div class="metric-info">
+                            <span class="metric-label" id="label-avg-x">Avg Annual Income</span>
+                            <h3 class="metric-value" id="metric-avg-x">-</h3>
+                        </div>
+                        <div class="metric-icon bg-cyan">
+                            <i class="fa-solid fa-wallet"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <div class="metric-info">
+                            <span class="metric-label" id="label-avg-y">Avg Spending Score</span>
+                            <h3 class="metric-value" id="metric-avg-y">-</h3>
+                        </div>
+                        <div class="metric-icon bg-pink">
+                            <i class="fa-solid fa-cart-shopping"></i>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-info">
+                            <span class="metric-label">Silhouette Score</span>
+                            <h3 class="metric-value" id="metric-silhouette">-</h3>
+                        </div>
+                        <div class="metric-icon bg-orange">
+                            <i class="fa-solid fa-circle-check"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dashboard Charts & Explanations -->
+                <div class="dashboard-grid">
+                    <!-- Elbow Method Card -->
+                    <div class="panel-card double-width">
+                        <div class="panel-header">
+                            <div class="title-group">
+                                <i class="fa-solid fa-chart-line header-icon"></i>
+                                <h4>Elbow Optimization Curve</h4>
+                            </div>
+                            <span class="helper-text">Find the ideal number of clusters (K)</span>
+                        </div>
+                        <div class="panel-body chart-wrapper">
+                            <canvas id="elbowChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Clustering Intro Card -->
+                    <div class="panel-card">
+                        <div class="panel-header">
+                            <div class="title-group">
+                                <i class="fa-solid fa-circle-info header-icon"></i>
+                                <h4>Methodology</h4>
+                            </div>
+                        </div>
+                        <div class="panel-body methodology-content">
+                            <p><strong>K-Means Clustering</strong> is an unsupervised learning algorithm that groups data points into $K$ distinct clusters based on their feature similarity (Euclidean distance).</p>
+                            <p>The <strong>Elbow Method</strong> plots the WCSS (Within-Cluster Sum of Squares) against different values of $K$. The "elbow" point is where the rate of drop slows down significantly, marking the optimal cluster count.</p>
+                            <div class="divider"></div>
+                            <div class="stat-highlight">
+                                <span class="highlight-title">Scaled Space Analysis</span>
+                                <p class="highlight-text">Features are standardized to a standard normal distribution (mean=0, variance=1) prior to clustering to ensure that units do not skew distance calculations.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Cluster Analyzer Tab -->
+            <section class="tab-panel" id="tab-analyzer">
+                <div class="analyzer-grid">
+                    <!-- Scatter Plot Area -->
+                    <div class="panel-card main-chart-card">
+                        <div class="panel-header">
+                            <div class="title-group">
+                                <i class="fa-solid fa-circle-nodes header-icon"></i>
+                                <h4>Customer Segmentation Plot (2D)</h4>
+                            </div>
+                            <div class="chart-legend-centroids">
+                                <i class="fa-solid fa-circle-xmark"></i> Centroids indicated with 'X'
+                            </div>
+                        </div>
+                        <div class="panel-body chart-wrapper">
+                            <canvas id="scatterChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Controls Panel -->
+                    <div class="panel-card controls-card">
+                        <div class="panel-header">
+                            <div class="title-group">
+                                <i class="fa-solid fa-sliders header-icon"></i>
+                                <h4>Control Deck</h4>
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <div class="control-group">
+                                <div class="control-label-row">
+                                    <label for="cluster-range">Number of Clusters (K):</label>
+                                    <span class="control-badge" id="cluster-val">5</span>
+                                </div>
+                                <input type="range" id="cluster-range" min="2" max="10" value="5" class="slider">
+                                <div class="slider-ticks">
+                                    <span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span>
+                                </div>
+                            </div>
+
+                            <div class="info-alert">
+                                <i class="fa-solid fa-circle-exclamation text-teal"></i>
+                                <p>Adjusting the cluster slider will instantly trigger the K-Means engine to re-train the model, update customer labels, and compute new centroids.</p>
+                            </div>
+
+                            <div class="divider"></div>
+
+                            <h5>Current Scaled Features:</h5>
+                            <ul class="feature-list">
+                                <li>
+                                    <i class="fa-solid fa-angle-right text-purple"></i>
+                                    <span class="feature-label">Feature X:</span>
+                                    <strong id="desc-feature-x">Annual Income</strong>
+                                </li>
+                                <li>
+                                    <i class="fa-solid fa-angle-right text-pink"></i>
+                                    <span class="feature-label">Feature Y:</span>
+                                    <strong id="desc-feature-y">Spending Score</strong>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Segment Breakdown Tab -->
+            <section class="tab-panel" id="tab-segments">
+                <div class="segment-breakdown-header">
+                    <h3>Identified Customer Profiles</h3>
+                    <p>Based on cluster centroids, the model classifies customers into distinct archetypes.</p>
+                </div>
+                <div class="segments-container" id="segments-container">
+                    <!-- Populated dynamically via JS -->
+                    <div class="loading-spinner">
+                        <i class="fa-solid fa-spinner fa-spin"></i> Loading cluster segments...
+                    </div>
+                </div>
+            </section>
+
+            <!-- Prospect Predictor Tab -->
+            <section class="tab-panel" id="tab-predictor">
+                <div class="predictor-grid">
+                    <!-- Predictor Form Card -->
+                    <div class="panel-card form-card">
+                        <div class="panel-header">
+                            <div class="title-group">
+                                <i class="fa-solid fa-user-plus header-icon"></i>
+                                <h4>New Prospect Details</h4>
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <form id="prediction-form" class="g-form">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="predict-age">Age (Years)</label>
+                                        <input type="number" id="predict-age" min="1" max="120" value="30" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="predict-gender">Gender</label>
+                                        <select id="predict-gender">
+                                            <option value="Female">Female</option>
+                                            <option value="Male">Male</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="predict-x" id="label-predict-x">Annual Income (k$)</label>
+                                    <div class="input-with-suffix">
+                                        <input type="number" id="predict-x" min="1" max="500" value="60" required>
+                                        <span class="suffix-label" id="suffix-predict-x">k$</span>
+                                    </div>
+                                    <span class="input-hint" id="hint-predict-x">Default Mall range: 15k$ - 137k$</span>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="predict-y" id="label-predict-y">Spending Score (1-100)</label>
+                                    <input type="number" id="predict-y" min="1" max="100" value="50" required>
+                                    <span class="input-hint" id="hint-predict-y">Default Mall range: 1 - 100</span>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary btn-block" id="btn-predict">
+                                    <i class="fa-solid fa-wand-magic-sparkles"></i> Classify Customer
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Result Panel Card -->
+                    <div class="panel-card result-card" id="predictor-result-panel">
+                        <div class="panel-body empty-result" id="prediction-empty-state">
+                            <div class="result-placeholder-icon">
+                                <i class="fa-solid fa-users-viewfinder"></i>
+                            </div>
+                            <h4>Awaiting Classification</h4>
+                            <p>Submit a prospect's specifications to view their predicted cluster, archetype definition, and strategic positioning.</p>
+                        </div>
+                        
+                        <div class="panel-body prediction-result-content" id="prediction-result-content" style="display: none;">
+                            <span class="result-badge">Classification Success</span>
+                            <h3 id="result-cluster-title">Cluster 1: Target Group</h3>
+                            
+                            <div class="result-metric-row">
+                                <div class="res-metric">
+                                    <span class="res-metric-lbl" id="res-lbl-x">Annual Income</span>
+                                    <strong id="res-val-x">$60k</strong>
+                                </div>
+                                <div class="res-metric">
+                                    <span class="res-metric-lbl" id="res-lbl-y">Spending Score</span>
+                                    <strong id="res-val-y">50/100</strong>
+                                </div>
+                            </div>
+                            
+                            <div class="divider"></div>
+                            
+                            <div class="archetype-desc-block">
+                                <h5>Customer Archetype</h5>
+                                <p id="result-archetype-description">High income and high spending behavior. Key target segment for luxury items and premium campaigns.</p>
+                            </div>
+
+                            <div class="campaign-recommendation-block">
+                                <h5><i class="fa-solid fa-bullseye"></i> Recommended Campaign Strategy</h5>
+                                <div class="campaign-card">
+                                    <p id="result-campaign-strategy">Deploy direct VIP invitations, loyalty programs, early previews of high-end collections, and premium personalized marketing channels.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Data Explorer Tab -->
+            <section class="tab-panel" id="tab-explorer">
+                <div class="explorer-grid">
+                    <!-- Upload custom data card -->
+                    <div class="panel-card upload-card">
+                        <div class="panel-header">
+                            <div class="title-group">
+                                <i class="fa-solid fa-cloud-arrow-up header-icon"></i>
+                                <h4>Import Custom Dataset</h4>
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <div class="upload-dropzone" id="upload-zone">
+                                <i class="fa-solid fa-file-excel drop-icon"></i>
+                                <p class="drop-text">Drag and drop customer CSV file here, or <span class="file-browse">browse files</span></p>
+                                <input type="file" id="file-input" accept=".csv" style="display: none;">
+                            </div>
+                            <div class="upload-progress-bar" id="upload-progress" style="display: none;">
+                                <div class="progress-fill"></div>
+                            </div>
+                            <div class="upload-status" id="upload-status"></div>
+                            <div class="requirements-box">
+                                <h6>CSV File Structure Requirements:</h6>
+                                <ul>
+                                    <li>Must be in standard comma-separated format.</li>
+                                    <li>Must contain at least 2 numerical columns to act as clustering features.</li>
+                                    <li>Features are automatically mapped based on column names (e.g. including 'income' and 'spend'/'score').</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Datatable card -->
+                    <div class="panel-card table-card">
+                        <div class="panel-header">
+                            <div class="title-group">
+                                <i class="fa-solid fa-table header-icon"></i>
+                                <h4>Dataset Records</h4>
+                            </div>
+                            <div class="table-actions">
+                                <div class="search-box">
+                                    <i class="fa-solid fa-magnifying-glass"></i>
+                                    <input type="text" id="table-search" placeholder="Search records...">
+                                </div>
+                                <button class="btn btn-secondary btn-sm" id="btn-export-csv">
+                                    <i class="fa-solid fa-download"></i> Export Segmented CSV
+                                </button>
+                            </div>
+                        </div>
+                        <div class="panel-body table-wrapper">
+                            <table class="data-table" id="data-table">
+                                <thead>
+                                    <tr id="table-headers">
+                                        <th>Customer ID</th>
+                                        <th>Gender</th>
+                                        <th>Age</th>
+                                        <th>Annual Income (k$)</th>
+                                        <th>Spending Score (1-100)</th>
+                                        <th>Cluster</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-body">
+                                    <!-- Rendered dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="table-footer">
+                            <div class="pagination-info" id="pagination-info">Showing 1 to 10 of 200 records</div>
+                            <div class="pagination-controls" id="pagination-controls">
+                                <button class="btn btn-icon" id="btn-prev-page" disabled><i class="fa-solid fa-chevron-left"></i></button>
+                                <button class="btn btn-icon" id="btn-next-page"><i class="fa-solid fa-chevron-right"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+</html>
